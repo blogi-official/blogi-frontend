@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { API_BASE } from '../api/client';  // client.js에서 export API_BASE 추가 필요
 
 // CSS 강제주입
 const injectStyles = () => {
@@ -426,18 +427,13 @@ function Login() {
   }, []);
 
   const handleSocialLogin = (provider) => {
-    const apiBaseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-
-    // 버튼에 로딩 상태 추가
     const button = document.querySelector(`.${provider.toLowerCase()}-btn`);
-    if (button) {
-      button.classList.add('btn-loading');
-    }
+    if (button) button.classList.add("btn-loading");
 
-    if (provider === 'Kakao') {
-      window.location.href = `${apiBaseUrl}/api/auth/kakao/login/`;
-    } else if (provider === 'Naver') {
-      window.location.href = `${apiBaseUrl}/api/auth/naver/login/`;
+    if (provider === "Kakao") {
+      window.location.href = `${API_BASE}/auth/kakao/login/`;
+    } else if (provider === "Naver") {
+      window.location.href = `${API_BASE}/auth/naver/login/`;
     }
   };
 

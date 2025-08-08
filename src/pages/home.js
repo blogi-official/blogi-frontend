@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React, { useEffect, useState, useRef } from 'react';
+import { api } from '../api/client';
 
 
 // CSS 강제 주입 
@@ -557,12 +557,12 @@ const Sidebar = ({ sortBy, setSortBy, page, setPage, totalPages }) => {
         <span>🎯</span>
         필터 & 정렬
       </h3>
-      
+
       <div className="sort-section">
         <label htmlFor="sort-select" className="sort-label">
           📊 정렬 기준
         </label>
-        <select 
+        <select
           id="sort-select"
           className="sort-select"
           value={sortBy}
@@ -573,12 +573,12 @@ const Sidebar = ({ sortBy, setSortBy, page, setPage, totalPages }) => {
           <option value="trending">📈 트렌딩</option>
         </select>
       </div>
-      
+
       {totalPages > 1 && (
         <div className="pagination-section">
           <label className="sort-label">📄 페이지</label>
           <div className="pagination">
-            <button 
+            <button
               className="pagination-btn"
               onClick={() => setPage(page - 1)}
               disabled={page <= 1}
@@ -588,7 +588,7 @@ const Sidebar = ({ sortBy, setSortBy, page, setPage, totalPages }) => {
             <span className="pagination-btn current-page">
               {page} / {totalPages}
             </span>
-            <button 
+            <button
               className="pagination-btn"
               onClick={() => setPage(page + 1)}
               disabled={page >= totalPages}
@@ -609,7 +609,8 @@ function Home() {
   const [sortBy, setSortBy] = useState('latest');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [error, setError] = useState(''); 
+  const [error, setError] = useState('');
+  const lastQueryRef = useRef('');
 
   useEffect(() => {
     injectStyles();
@@ -618,10 +619,7 @@ function Home() {
   useEffect(() => {
     const fetchKeywords = async () => {
       try {
-        const token = localStorage.getItem('accessToken'); 
-
-        const response = await axios.get('http://localhost:8000/api/keywords/', {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        const response = await api.get('/keywords/', {
           params: { sort: sortBy, page, page_size: 12 }
         });
 
@@ -642,32 +640,17 @@ function Home() {
 
   const handleKeywordClick = async (keyword) => {
     const token = localStorage.getItem("accessToken");
-  
     if (!token) {
-      // 커스텀 알림 메시지 
       setError("🔒 로그인 후 이용해주세요.");
-      
-  // 페이지 이동은 딜레이 후 실행되도록 하되, 렌더링 시간 확보
-  setTimeout(() => {
-    window.location.replace("/login");  // replace로 하면 뒤로가기도 방지 가능
-  }, 2000);
-        
+      setTimeout(() => {
+        window.location.replace("/login");
+      }, 2000);
       return;
     }
-  
     try {
-      await axios.post(
-        `http://localhost:8000/api/keywords/${keyword.id}/click/`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      await api.post(`/keywords/${keyword.id}/click/`);
     } catch (err) {
-      console.warn("클릭 로그 실패 (무시하고 이동)", err);
+      console.warn("클릭 로그 실패", err);
     } finally {
       window.location.href = `/generate?keyword=${encodeURIComponent(keyword.title)}`;
     }

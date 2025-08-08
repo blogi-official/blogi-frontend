@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { api, AUTH } from '../api/client';
 
 const categoryOptions = ["연예", "경제", "스포츠", "패션", "자동차", "여행", "맛집"];
 
@@ -560,39 +561,37 @@ const Onboarding = () => {
     }
 
     try {
-      const token = localStorage.getItem('accessToken');
-      const res = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/user/interests/`, {
-        method: 'POST',
+      const token = localStorage.getItem(AUTH.TOKEN_KEY);
+      if (!token) {
+        setError('❗ 로그인 상태가 아닙니다. 다시 로그인해주세요.');
+        setTimeout(() => navigate('/login'), 2000);
+        return;
+      }
+
+      const res = await api.post('/user/interests/', payload, {
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(payload),
       });
 
-      const data = await res.json();
-
       if (res.status === 200) {
-        console.log('✅ 온보딩 완료:', data.user_info);
-        // 성공 애니메이션 후 이동
-        setTimeout(() => {
-          navigate('/');
-        }, 500);
-      } else if (res.status === 409) {
+        console.log('✅ 온보딩 완료:', res.data.user_info);
+        setTimeout(() => navigate('/'), 500);
+      }
+    } catch (err) {
+      const status = err.response?.status;
+      const data = err.response?.data;
+
+      if (status === 409) {
         setError('❗ 해당 닉네임은 이미 사용 중입니다.');
-      } else if (res.status === 400) {
-        setError(data.detail || '❗ 유효하지 않은 요청입니다.');
-      } else if (res.status === 401) {
+      } else if (status === 400) {
+        setError(data?.detail || '❗ 유효하지 않은 요청입니다.');
+      } else if (status === 401) {
         setError('❗ 로그인 상태가 아닙니다. 다시 로그인해주세요.');
-        setTimeout(() => {
-          navigate('/login');
-        }, 2000);
+        setTimeout(() => navigate('/login'), 2000);
       } else {
         setError('❗ 알 수 없는 오류가 발생했습니다.');
       }
-    } catch (err) {
-      console.error(err);
-      setError('❗ 서버와의 연결에 실패했습니다.');
     } finally {
       setIsLoading(false);
     }
@@ -616,9 +615,7 @@ const Onboarding = () => {
           <div className="onboarding-header">
             <div className="welcome-icon">🎉</div>
             <h1 className="onboarding-title">환영합니다!</h1>
-            <p className="onboarding-subtitle">
-              닉네임과 관심사를 설정해 주세요
-            </p>
+            <p className="onboarding-subtitle">닉네임과 관심사를 설정해 주세요</p>
           </div>
 
           {/* 닉네임 입력 */}
@@ -642,13 +639,9 @@ const Onboarding = () => {
                   key={category}
                   type="button"
                   onClick={() => toggleCategory(category)}
-                  className={`category-btn ${
-                    selectedCategories.includes(category) ? 'selected' : ''
-                  }`}
+                  className={`category-btn ${selectedCategories.includes(category) ? 'selected' : ''}`}
                 >
-                  <span className="category-emoji">
-                    {categoryEmojis[category]}
-                  </span>
+                  <span className="category-emoji">{categoryEmojis[category]}</span>
                   <span className="category-text">{category}</span>
                 </button>
               ))}
@@ -656,11 +649,7 @@ const Onboarding = () => {
           </div>
 
           {/* 에러 메시지 */}
-          {error && (
-            <div className="error-message">
-              {error}
-            </div>
-          )}
+          {error && <div className="error-message">{error}</div>}
 
           {/* 시작하기 버튼 */}
           <button

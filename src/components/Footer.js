@@ -5,10 +5,7 @@ function Footer() {
     <footer className="py-5 bg-dark">
       <div className="container">
         <p className="m-0 text-center text-white">
-          © 2025 Blogi — Template by{' '} 
-          <a href="https://startbootstrap.com" style={{ color: 'inherit' }} target="_blank" rel="noopener noreferrer">
-          Start Bootstrap
-          </a>
+          © 2025 Blogi All Rights Reserved      
         </p>
       </div>
     </footer>

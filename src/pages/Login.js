@@ -14,16 +14,7 @@ const injectStyles = () => {
       margin: 0;
       padding: 0;
     }
-    
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-      color: #1e293b;
-      line-height: 1.6;
-      min-height: 100vh;
-      overflow: hidden;
-    }
-    
+        
     /* 마법같은 배경 애니메이션 */
     body::before {
       content: '';
@@ -171,23 +162,7 @@ const injectStyles = () => {
       }
     }
     
-    .login-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 6px;
-      background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #667eea);
-      background-size: 200% 100%;
-      animation: gradient-flow 3s ease-in-out infinite;
-    }
-    
-    @keyframes gradient-flow {
-      0%, 100% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-    }
-    
+
     .login-card::after {
       content: '';
       position: absolute;

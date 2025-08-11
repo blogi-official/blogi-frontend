@@ -1,21 +1,24 @@
 import React, { useEffect, useState } from 'react';
-import { fetchPriorityNews } from '../api/news';
+import { fetchTop3Keywords } from '../api/news';
 
-function PriorityNewsSidebar() {
-  const [news, setNews] = useState([]);
+function PopularKeywordsSidebar() {
+  const [keywords, setKeywords] = useState([]);
 
   useEffect(() => {
-    fetchPriorityNews().then(setNews);
+    fetchTop3Keywords().then(setKeywords);
   }, []);
 
   return (
     <div className="card mb-4">
-      <div className="card-header">🔥 실시간 뉴스</div>
+      <div className="card-header">🔥 블로기 인기 키워드 TOP 3</div>
       <div className="card-body">
         <ul className="list-unstyled mb-0">
-          {news.map((item, idx) => (
+          {keywords.map((item, idx) => (
             <li key={idx} className="mb-2">
-              <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-dark">
+              <a
+                href={`/generate?keyword=${encodeURIComponent(item.title)}`}
+                className="text-dark"
+              >
                 {item.title}
               </a>
             </li>
@@ -26,4 +29,4 @@ function PriorityNewsSidebar() {
   );
 }
 
-export default PriorityNewsSidebar;
+export default PopularKeywordsSidebar;

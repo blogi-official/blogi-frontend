@@ -1,6 +1,6 @@
 // src/pages/admin/Keywords.js
 import React from "react";
-import { getPublicKeywords, parseKeywordList } from "../../api/keywords";
+import { fetchAdminKeywords } from "../../api/admin";
 import KeywordDetailModal from "../../components/admin/KeywordDetailModal";
 import ClovaPreviewModal from "../../components/admin/ClovaPreviewModal";
 
@@ -12,6 +12,10 @@ export default function Keywords() {
   const [error, setError] = React.useState("");
 
   const [q, setQ] = React.useState("");
+  const [totalPages, setTotalPages] = React.useState(1);
+  const [totalItems, setTotalItems] = React.useState(0);
+
+  // ✅ 빠져있던 페이징 상태 복구
   const [page, setPage] = React.useState(1);
   const [pageSize, setPageSize] = React.useState(20);
 
@@ -42,7 +46,7 @@ export default function Keywords() {
         left: 0;
         right: 0;
         bottom: 0;
-        background: 
+        background:
           radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
           radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
           radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
@@ -462,22 +466,30 @@ export default function Keywords() {
     document.head.appendChild(style);
   };
 
-   React.useLayoutEffect(() => {
-       injectStyles(); // 첫 페인트 전에 스타일 붙이기
-       return () => {
-         const el = document.getElementById('keywords-admin-styles');
-         if (el) el.remove(); // 라우트 이탈 시 깔끔 제거
-       };
-     }, []);
+  React.useLayoutEffect(() => {
+    injectStyles(); // 첫 페인트 전에 스타일 붙이기
+    return () => {
+      const el = document.getElementById('keywords-admin-styles');
+      if (el) el.remove(); // 라우트 이탈 시 깔끔 제거
+    };
+  }, []);
 
   const load = React.useCallback(async () => {
     try {
       setLoading(true);
       setError("");
-      const payload = await getPublicKeywords({ q, page, page_size: pageSize, sort: "latest" });
-      setList(parseKeywordList(payload));
+      const payload = await fetchAdminKeywords({
+        search: q || undefined,
+        page,
+        page_size: pageSize,
+        sort: "created_desc",
+      });
+      const items = Array.isArray(payload?.data) ? payload.data : [];
+      setList(items);
+      setTotalPages(Number(payload?.pagination?.total_pages ?? 1));
+      setTotalItems(Number(payload?.pagination?.total_items ?? items.length));
     } catch (e) {
-      console.error("[Keywords] getPublicKeywords error:", e);
+      console.error("[Keywords] fetchAdminKeywords error:", e);
       setError(e?.response?.data?.detail || e?.message || "목록을 불러오지 못했습니다.");
     } finally {
       setLoading(false);
@@ -509,22 +521,20 @@ export default function Keywords() {
   };
 
   return (
-     <div
-   className="keywords-container"
-   style={{
-     minHeight: "100vh",
-     background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-     position: "relative",
-     overflowX: "hidden",
-   }}
->
+    <div
+      className="keywords-container"
+      style={{
+        minHeight: "100vh",
+        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+        position: "relative",
+        overflowX: "hidden",
+      }}
+    >
       {/* 헤더 */}
       <header className="keywords-header">
-        <h1 className="keywords-title">
-          🔑 Keywords Admin
-        </h1>
+        <h1 className="keywords-title">🔑 Keywords Admin</h1>
         <p className="keywords-subtitle">
-          공개 키워드 목록에서 항목을 선택해 상세 정보를 확인하고 Clova 미리보기를 볼 수 있어요
+          관리자 전용 전체 키워드 목록 — 총 {nf(totalItems)}건
         </p>
       </header>
 
@@ -540,7 +550,7 @@ export default function Keywords() {
                   onChange={(e) => setQ(e.target.value)}
                   onKeyDown={handleKeyPress}
                   className="keywords-search-input"
-                  placeholder="제목 키워드를 입력하세요..."
+                  placeholder="제목/카테고리 검색..."
                 />
               </div>
               <div className="keywords-search-controls">
@@ -573,9 +583,7 @@ export default function Keywords() {
       {/* 목록 */}
       <main className="keywords-main">
         {error && (
-          <div className="keywords-error">
-            ❌ {error}
-          </div>
+          <div className="keywords-error">❌ {error}</div>
         )}
 
         {loading ? (
@@ -626,28 +634,28 @@ export default function Keywords() {
         )}
 
         {/* 페이지네이션 */}
-        {list.length > 0 && (
+        {totalItems > 0 && (
           <div className="keywords-pagination">
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1}
               className={`keywords-pagination-button ${
-                page <= 1 
-                  ? 'keywords-pagination-button-disabled' 
+                page <= 1
+                  ? 'keywords-pagination-button-disabled'
                   : 'keywords-pagination-button-active'
               }`}
             >
               ← 이전 페이지
             </button>
             <div className="keywords-pagination-current">
-              페이지 {nf(page)}
+              페이지 {nf(page)} / {nf(totalPages)}
             </div>
             <button
-              onClick={() => setPage((p) => p + 1)}
-              disabled={list.length < pageSize}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page >= totalPages}
               className={`keywords-pagination-button ${
-                list.length < pageSize 
-                  ? 'keywords-pagination-button-disabled' 
+                page >= totalPages
+                  ? 'keywords-pagination-button-disabled'
                   : 'keywords-pagination-button-active'
               }`}
             >

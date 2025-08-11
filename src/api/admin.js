@@ -1,6 +1,10 @@
 // src/api/admin.js
 import { admin } from "./client";
 
+// 🔑 [추가] 관리자 전체 키워드 목록 (백엔드 커스텀 페이지네이션: { pagination, data })
+export const fetchAdminKeywords = (params = {}) =>
+  admin.get("/admin/titles/", { params }).then(r => r.data);
+
 // ===== AUTH =====
 export const adminLogin = (email, password) =>
   admin.post("/admin/auth/admin-login/", { email, password }).then((r) => r.data);

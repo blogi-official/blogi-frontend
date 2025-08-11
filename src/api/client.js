@@ -4,20 +4,26 @@ import axios from "axios";
 const localHosts = ["localhost", "127.0.0.1", "::1"];
 const isLocal = localHosts.includes(window.location.hostname);
 
-const API_BASE = isLocal
-  ? "http://127.0.0.1:8000/api"       // 로컬 Django
-  : "/api";                           // 배포 환경에서는 상대경로
+// ✅ 기존 코드와의 하위 호환을 위해 API_BASE도 그대로 export
+const API_BASE = isLocal ? "http://127.0.0.1:8000/api" : "/api";
+const ADMIN_BASE = isLocal ? "http://127.0.0.1:8000" : "/";
+const INTERNAL_BASE = isLocal ? "http://127.0.0.1:8001/api/v1/internal" : "/api/v1/internal";
 
-const INTERNAL_BASE = isLocal
-  ? "http://127.0.0.1:8001/api/v1/internal" // 로컬 FastAPI
-  : "/api/v1/internal";                      // 배포 환경
+// ✅ 사용자/관리자 토큰 키 분리
+export const USER_TOKEN_KEY = "accessToken";
+export const ADMIN_TOKEN_KEY = "blogi_admin_access";
 
-const TOKEN_KEY = "accessToken";
-
+// ===== axios instances =====
 export const api = axios.create({
   baseURL: API_BASE,
   headers: { "Content-Type": "application/json" },
   withCredentials: true,
+});
+
+export const admin = axios.create({
+  baseURL: ADMIN_BASE,
+  headers: { "Content-Type": "application/json" },
+  withCredentials: false,
 });
 
 export const internal = axios.create({
@@ -26,38 +32,67 @@ export const internal = axios.create({
   withCredentials: false,
 });
 
-// 토큰 자동 첨부
-const attachAuth = (config) => {
-  const token = localStorage.getItem(TOKEN_KEY);
-  if (token && token.trim() !== "") {
-    config.headers.Authorization = `Bearer ${token}`;
+// ===== utils: 관리자 토큰 주입/해제 =====
+export function setAdminAuthToken(token) {
+  if (token) {
+    localStorage.setItem(ADMIN_TOKEN_KEY, token);
+    admin.defaults.headers.common["Authorization"] = `Bearer ${token}`;
   } else {
-    // 토큰 없으면 Authorization 헤더 삭제
-    delete config.headers.Authorization;
+    localStorage.removeItem(ADMIN_TOKEN_KEY);
+    delete admin.defaults.headers.common["Authorization"];
   }
+}
+
+// 앱 시작 시 저장된 관리자 토큰을 헤더에 즉시 반영 (새로고침 대응)
+const savedAdmin = localStorage.getItem(ADMIN_TOKEN_KEY);
+if (savedAdmin) {
+  admin.defaults.headers.common["Authorization"] = `Bearer ${savedAdmin}`;
+}
+
+// ===== interceptors =====
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem(USER_TOKEN_KEY);
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  else delete config.headers.Authorization;
   return config;
-};
+});
 
-api.interceptors.request.use(attachAuth);
-internal.interceptors.request.use(attachAuth);
+admin.interceptors.request.use((config) => {
+  const token = localStorage.getItem(ADMIN_TOKEN_KEY);
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  else delete config.headers.Authorization;
+  return config;
+});
 
-// 401 공통 처리
+internal.interceptors.request.use((config) => {
+  const token = localStorage.getItem(USER_TOKEN_KEY);
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  else delete config.headers.Authorization;
+  return config;
+});
+
 const onError = (error) => {
   const status = error?.response?.status;
-  if (status === 401) {
-    // 토큰 만료 처리
-    // window.location.href = "/login";
+  const url = String(error?.config?.url || "");
+  // baseURL이 붙어 절대 URL이 될 수 있으므로 includes로도 체크
+  if (status === 401 && (url.startsWith("/admin/") || url.includes("/admin/"))) {
+    localStorage.removeItem(ADMIN_TOKEN_KEY);
+    delete admin.defaults.headers.common["Authorization"];
+    if (!window.location.pathname.startsWith("/admin/login")) {
+      window.location.replace("/admin/login");
+    }
   }
   return Promise.reject(error);
 };
 
 api.interceptors.response.use((r) => r, onError);
+admin.interceptors.response.use((r) => r, onError);
 internal.interceptors.response.use((r) => r, onError);
 
-// 프록시 이미지 URL 생성
+// ===== utils =====
 export const proxyImage = (originUrl) =>
   `${INTERNAL_BASE}/proxy-image?url=${encodeURIComponent(originUrl)}`;
 
-export const AUTH = { TOKEN_KEY };
+// ✅ 하위 호환: 기존 코드가 쓰던 이름 그대로 다시 export
+export const AUTH = { TOKEN_KEY: USER_TOKEN_KEY, ADMIN_TOKEN_KEY };
 export { API_BASE };
-

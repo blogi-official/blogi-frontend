@@ -1,6 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { api } from '../api/client';
 
+// 분리해둔 훅과 드로어 컴포넌트
+import useGenerateFlow from "../hooks/useGenerateFlow";
+import GenerateResultDrawer from "../components/GenerateResultDrawer";
+
 
 // CSS 강제 주입 
 const injectStyles = () => {
@@ -549,7 +553,7 @@ const injectStyles = () => {
   document.head.appendChild(style);
 };
 
-// Sidebar 컴포넌트
+// Sidebar 컴포넌트 (변경 없음)
 const Sidebar = ({ sortBy, setSortBy, page, setPage, totalPages }) => {
   return (
     <div className="sidebar">
@@ -606,11 +610,27 @@ const Sidebar = ({ sortBy, setSortBy, page, setPage, totalPages }) => {
 function Home() {
   const [keywords, setKeywords] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [sortBy, setSortBy] = useState('latest');
+  const [sortBy, setSortBy] = useState("latest");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [error, setError] = useState('');
-  const lastQueryRef = useRef('');
+  const [error, setError] = useState("");
+  const lastQueryRef = useRef("");
+
+  // ★ 추가: 생성/상세/복사/PDF은 훅이 담당, Home은 호출만
+  const {
+    generatingId,     // 현재 생성 중인 keyword id (UI 비활성화 용)
+    detail,           // 상세 데이터
+    fromCache,        // 캐시여부 뱃지
+    loadingDetail,    // 상세 로딩 상태
+    downloadingPdf,   // PDF 로딩 상태
+    open,             // 드로어 열림
+    error: flowError, // 훅 내부 에러 메시지
+    generateByKeyword,
+    copyCurrent,
+    downloadPdf,
+    close,
+
+  } = useGenerateFlow();
 
   useEffect(() => {
     injectStyles();
@@ -618,9 +638,13 @@ function Home() {
 
   useEffect(() => {
     const fetchKeywords = async () => {
+      setLoading(true);
       try {
-        const response = await api.get('/keywords/', {
-          params: { sort: sortBy, page, page_size: 12 }
+        // 🔁 백엔드 호환: trending은 popular로 매핑
+        const safeSort = sortBy === "trending" ? "popular" : sortBy;
+
+        const response = await api.get("/keywords/", {
+          params: { sort: safeSort, page, page_size: 12 },
         });
 
         const data = response.data;
@@ -629,7 +653,7 @@ function Home() {
           setTotalPages(data.pagination.total_pages || 1);
         }
       } catch (err) {
-        console.error('키워드 불러오기 실패', err);
+        console.error("키워드 불러오기 실패", err);
       } finally {
         setLoading(false);
       }
@@ -638,27 +662,15 @@ function Home() {
     fetchKeywords();
   }, [sortBy, page]);
 
+  // ✅ 최소 수정: 클릭 시 훅만 호출 (페이지 이동/직접 호출 제거)
   const handleKeywordClick = async (keyword) => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) {
-      setError("🔒 로그인 후 이용해주세요.");
-      setTimeout(() => {
-        window.location.replace("/login");
-      }, 2000);
-      return;
-    }
-    try {
-      await api.post(`/keywords/${keyword.id}/click/`);
-    } catch (err) {
-      console.warn("클릭 로그 실패", err);
-    } finally {
-      window.location.href = `/generate?keyword=${encodeURIComponent(keyword.title)}`;
-    }
+    // 로그인 체크는 훅 내부에서 처리(없으면 /login 이동)
+    await generateByKeyword(keyword);
   };
 
   return (
     <>
-      {/* 헤더 - 완전히 새로운 마법 */}
+      {/* 헤더 (기존 유지) */}
       <header className="header">
         <div className="floating-elements">
           <div className="floating-element"></div>
@@ -692,18 +704,31 @@ function Home() {
               </div>
             ) : (
               <div className="keywords-grid">
-                {keywords.map((keyword) => (
-                  <div
-                    key={keyword.id}
-                    className="keyword-card"
-                    onClick={() => handleKeywordClick(keyword)}
-                  >
-                    <h3 className="keyword-title">{keyword.title}</h3>
-                    <div className="keyword-category">
-                      {keyword.category}
+                {keywords.map((keyword) => {
+                  const disabled = !!generatingId;
+                  const isThisGenerating = generatingId === keyword.id;
+                  return (
+                    <div
+                      key={keyword.id}
+                      className="keyword-card"
+                      onClick={() => !disabled && handleKeywordClick(keyword)}
+                      style={disabled ? { pointerEvents: "none", opacity: 0.6 } : {}}
+                    >
+                      <h3 className="keyword-title">{keyword.title}</h3>
+                      <div className="keyword-category">{keyword.category}</div>
+                      {isThisGenerating && (
+                        <div style={{ position: "absolute", right: 16, top: 16, fontSize: 18 }}>
+                          ⏳
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
+              </div>
+            )}
+            {(error || flowError) && (
+              <div style={{ marginTop: 16, color: "#dc2626", fontWeight: 600 }}>
+                {flowError || error}
               </div>
             )}
           </div>
@@ -718,6 +743,18 @@ function Home() {
           />
         </div>
       </div>
+
+      {/* ★ 추가: 생성 결과 드로어 (컴포넌트 분리) */}
+      <GenerateResultDrawer
+        open={open}
+        loading={loadingDetail}
+        detail={detail}
+        fromCache={fromCache}
+        onCopy={copyCurrent}
+        onDownloadPdf={downloadPdf}
+        onClose={close}
+        downloadingPdf={downloadingPdf}
+      />
     </>
   );
 }

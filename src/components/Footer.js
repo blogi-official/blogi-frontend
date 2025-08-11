@@ -99,9 +99,9 @@ function Footer() {
       <div className="container footer-content">
         <p className="footer-text">
           <span className="footer-year">© 2025</span>
-          <div className="footer-divider"></div>
+          <span className="footer-divider"></span>
           <span className="footer-logo">Blogi</span>
-          <div className="footer-divider"></div>
+          <span className="footer-divider"></span>
           <span>All Rights Reserved</span>
         </p>
       </div>

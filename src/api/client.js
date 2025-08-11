@@ -4,10 +4,24 @@ import axios from "axios";
 const localHosts = ["localhost", "127.0.0.1", "::1"];
 const isLocal = localHosts.includes(window.location.hostname);
 
+// ── 배포용 절대 오리진 (필요시 window.__BLOGI_* 로 재정의 가능) ──
+const PROD_API_ORIGIN =
+  window.__BLOGI_API_ORIGIN || "https://blogi.store";
+const PROD_FASTAPI_ORIGIN =
+  window.__BLOGI_FASTAPI_ORIGIN || "https://blogi.store/fastapi";
+
 // ✅ 기존 코드와의 하위 호환을 위해 API_BASE도 그대로 export
-const API_BASE = isLocal ? "http://127.0.0.1:8000/api" : "/api";
-const ADMIN_BASE = isLocal ? "http://127.0.0.1:8000" : "/";
-const INTERNAL_BASE = isLocal ? "http://127.0.0.1:8001/api/v1/internal" : "/api/v1/internal";
+const API_BASE = isLocal
+  ? "http://127.0.0.1:8000/api"
+  : `${PROD_API_ORIGIN}/api`;
+
+const ADMIN_BASE = isLocal
+  ? "http://127.0.0.1:8000"
+  : `${PROD_API_ORIGIN}`;
+
+const INTERNAL_BASE = isLocal
+  ? "http://127.0.0.1:8001/api/v1/internal"
+  : `${PROD_FASTAPI_ORIGIN}/api/v1/internal`;
 
 // ✅ 사용자/관리자 토큰 키 분리
 export const USER_TOKEN_KEY = "accessToken";
@@ -17,7 +31,7 @@ export const ADMIN_TOKEN_KEY = "blogi_admin_access";
 export const api = axios.create({
   baseURL: API_BASE,
   headers: { "Content-Type": "application/json" },
-  withCredentials: true,
+  withCredentials: true, // JWT bearer만 쓰면 필수는 아님. 유지해도 무방.
 });
 
 export const admin = axios.create({
@@ -96,3 +110,4 @@ export const proxyImage = (originUrl) =>
 // ✅ 하위 호환: 기존 코드가 쓰던 이름 그대로 다시 export
 export const AUTH = { TOKEN_KEY: USER_TOKEN_KEY, ADMIN_TOKEN_KEY };
 export { API_BASE };
+

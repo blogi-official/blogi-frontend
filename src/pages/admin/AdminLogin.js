@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useLayoutEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useAdminAuth from "../../hooks/useAdminAuth";
+import { setAdminAuthToken } from "../../api/client";
 import { adminLogin } from "../../api/admin";
 
 export default function AdminLogin() {
@@ -341,10 +342,13 @@ export default function AdminLogin() {
     }
   };
 
-  useEffect(() => {
-    console.log("[AdminLogin] mounted");
-    injectAdminStyles();
-  }, []);
+  useLayoutEffect(() => {
+      injectAdminStyles();                // 첫 페인트 전에 적용 (FOUC 방지)
+      return () => {
+        const el = document.getElementById("blogi-admin-login-styles");
+        if (el) el.remove();              // 라우트 이탈 시 누수 방지
+      };
+    }, []);
 
   const doLogin = async () => {
     if (loading) return;
@@ -366,7 +370,8 @@ export default function AdminLogin() {
       // 성공 애니메이션 표시
       showSuccessAnimation();
 
-      // 전역 저장 + axios 헤더 주입 + 훅 동기화
+      // 전역 저장(훅) + axios 헤더 즉시 주입 (ADMIN_BASE로 가는 요청에 바로 반영)
+      setAdminAuthToken(access);
       save(access);
 
       console.log("[AdminLogin] token saved, navigating to /admin");
@@ -380,7 +385,7 @@ export default function AdminLogin() {
       setTimeout(() => {
         if (!window.location.pathname.startsWith("/admin")) {
           console.warn("[AdminLogin] hard redirect fallback used");
-          window.location.replace("/admin/dashboard");
+          window.location.replace("/admin");
         }
       }, 1000);
     } catch (error) {

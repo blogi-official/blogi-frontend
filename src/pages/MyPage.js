@@ -143,7 +143,7 @@ const MyPage = () => {
       .mypage-header {
         text-align: center;
         margin-bottom: 4rem;
-        position: sticky;
+        position: relative;
         z-index: 2;
       }
       

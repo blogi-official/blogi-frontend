@@ -1,10 +1,11 @@
 // src/components/Navigation.js
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { ADMIN_TOKEN_KEY, api } from '../api/client';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { AUTH, ADMIN_TOKEN_KEY, api } from '../api/client';
 
 function Navigator() {
   const location = useLocation();
+  const navigate = useNavigate();
 
   // ✅ CSS 주입 (한 번만)
   const injectStyles = () => {
@@ -18,7 +19,7 @@ function Navigator() {
         background: linear-gradient(135deg, #1a1a1a, #2d2d2d) !important;
         border-bottom: 1px solid #404040;
         box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
-        backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);a
         position: sticky;
         top: 0;
         z-index: 1000;
@@ -140,29 +141,26 @@ function Navigator() {
   // 현재 경로 활성화
   const isActive = (path) => (location.pathname === path ? 'active' : '');
 
-  const [loggedIn, setLoggedIn] = React.useState(!!localStorage.getItem('userToken'));
+  const [loggedIn, setLoggedIn] = useState(!!localStorage.getItem(AUTH.TOKEN_KEY));
 
-  // 소셜 로그아웃
+  // 토큰 변경 시 자동 반영 (다른 탭/창 포함)
+  useEffect(() => {
+    const onStorage = () => setLoggedIn(!!localStorage.getItem(AUTH.TOKEN_KEY));
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+
+  // 로그아웃 처리
   const handleLogout = () => {
-    // 카카오 로그아웃
-    if (window.Kakao && window.Kakao.Auth) {
-      window.Kakao.Auth.logout(() => {
-        console.log("카카오 로그아웃 완료");
-      });
-    }
-  
-    // 네이버 로그아웃
-    if (window.naver && window.naver.LoginWithNaverId) {
-      window.naver.LoginWithNaverId.logout();
-      console.log("네이버 로그아웃 완료");
-    }
-  
-    // 로컬스토리지 토큰 제거 + axios 헤더 삭제
-    localStorage.removeItem('userToken'); // 실제 저장 키에 맞게 변경
+    localStorage.removeItem(AUTH.TOKEN_KEY);
     delete api.defaults.headers.common['Authorization'];
 
-    closeMenu();
-    setLoggedIn(false); // 상태 관리용 (useState)
+    // 소셜 로그아웃
+    if (window.Kakao && window.Kakao.Auth) window.Kakao.Auth.logout(() => console.log("카카오 로그아웃 완료"));
+    if (window.naver && window.naver.LoginWithNaverId) window.naver.LoginWithNaverId.logout();
+
+    setLoggedIn(false);
+    navigate("/login");
   };
 
   return (
@@ -205,17 +203,17 @@ function Navigator() {
             <li className="nav-item nav-item-custom">
               <Link className={`nav-link nav-link-custom ${isActive('/mypage')}`} to="/mypage" onClick={closeMenu}>👤 MyPage</Link>
             </li>
+            
             {loggedIn ? (
               <li className="nav-item nav-item-custom">
-                <button className="nav-link nav-link-custom" style={{background:'none',border:'none',cursor:'pointer'}} onClick={handleLogout}>
-                  🔓 Logout
-                </button>
+                <button className={`nav-link nav-link-custom`} onClick={handleLogout}>🔓 Logout</button>
               </li>
             ) : (
-            <li className="nav-item nav-item-custom">
-              <Link className={`nav-link nav-link-custom ${isActive('/login')}`} to="/login" onClick={closeMenu}>🔐 Login</Link>
-            </li>
-            )}    
+              <li className="nav-item nav-item-custom">
+                <Link className={`nav-link nav-link-custom ${isActive('/login')}`} to="/login" onClick={closeMenu}>🔐 Login</Link>
+              </li>
+            )}
+            
 
             {/* ✅ 관리자 진입 메뉴 (토큰 유무로 분기) */}
             <li className="nav-item nav-item-custom">

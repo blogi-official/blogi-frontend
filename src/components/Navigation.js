@@ -168,7 +168,7 @@ function Navigator() {
             <li className="nav-item nav-item-custom">
               <Link className={`nav-link nav-link-custom ${isActive('/about')}`} to="/about" onClick={closeMenu}>ℹ️ About</Link>
             </li>
-            <li className="nav-item nav-item-custom">
+            {/* <li className="nav-item nav-item-custom">
               <Link className={`nav-link nav-link-custom ${isActive('/chatBot')}`} to="/chatBot" onClick={closeMenu}>🤖 AI</Link>
             </li>
             <li className="nav-item nav-item-custom">
@@ -176,7 +176,7 @@ function Navigator() {
             </li>
             <li className="nav-item nav-item-custom">
               <Link className={`nav-link nav-link-custom ${isActive('/blogList')}`} to="/blogList" onClick={closeMenu}>📝 Blog</Link>
-            </li>
+            </li> */}
             <li className="nav-item nav-item-custom">
               <Link className={`nav-link nav-link-custom ${isActive('/mypage')}`} to="/mypage" onClick={closeMenu}>👤 MyPage</Link>
             </li>

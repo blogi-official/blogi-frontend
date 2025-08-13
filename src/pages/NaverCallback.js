@@ -31,6 +31,8 @@ const NaverCallback = () => {
 
         localStorage.setItem(AUTH.TOKEN_KEY, token);
 
+        window.dispatchEvent(new Event("loginStateChange"));
+
         if (isOnboarded) {
           navigate("/");
         } else {

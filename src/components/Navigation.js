@@ -96,6 +96,7 @@ function Navigator() {
         .nav-link-custom {
           margin-bottom: 0.5rem;
           text-align: center;
+          width: 100%;
         }
       }
 
@@ -148,6 +149,17 @@ function Navigator() {
     const onStorage = () => setLoggedIn(!!localStorage.getItem(AUTH.TOKEN_KEY));
     window.addEventListener('storage', onStorage);
     return () => window.removeEventListener('storage', onStorage);
+  }, []);
+
+  // 로그인 동기화 문제 해결
+  useEffect(() => {
+    const handleStateChange = () => {
+      setLoggedIn(!!localStorage.getItem(AUTH.TOKEN_KEY));
+    };
+    window.addEventListener('loginStateChange', handleStateChange);
+    return () => {
+      window.removeEventListener('loginStateChange', handleStateChange);
+    };
   }, []);
 
   // 로그아웃 처리
@@ -214,7 +226,6 @@ function Navigator() {
               </li>
             )}
             
-
             {/* ✅ 관리자 진입 메뉴 (토큰 유무로 분기) */}
             <li className="nav-item nav-item-custom">
               {adminAuthed ? (

@@ -1,7 +1,7 @@
 // src/components/Navigation.js
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ADMIN_TOKEN_KEY } from '../api/client';
+import { ADMIN_TOKEN_KEY, api } from '../api/client';
 
 function Navigator() {
   const location = useLocation();
@@ -140,6 +140,31 @@ function Navigator() {
   // 현재 경로 활성화
   const isActive = (path) => (location.pathname === path ? 'active' : '');
 
+  const [loggedIn, setLoggedIn] = React.useState(!!localStorage.getItem('userToken'));
+
+  // 소셜 로그아웃
+  const handleLogout = () => {
+    // 카카오 로그아웃
+    if (window.Kakao && window.Kakao.Auth) {
+      window.Kakao.Auth.logout(() => {
+        console.log("카카오 로그아웃 완료");
+      });
+    }
+  
+    // 네이버 로그아웃
+    if (window.naver && window.naver.LoginWithNaverId) {
+      window.naver.LoginWithNaverId.logout();
+      console.log("네이버 로그아웃 완료");
+    }
+  
+    // 로컬스토리지 토큰 제거 + axios 헤더 삭제
+    localStorage.removeItem('userToken'); // 실제 저장 키에 맞게 변경
+    delete api.defaults.headers.common['Authorization'];
+
+    closeMenu();
+    setLoggedIn(false); // 상태 관리용 (useState)
+  };
+
   return (
     <nav className="navbar navbar-expand-lg navbar-dark dark-navbar">
       <div className="container">
@@ -180,9 +205,17 @@ function Navigator() {
             <li className="nav-item nav-item-custom">
               <Link className={`nav-link nav-link-custom ${isActive('/mypage')}`} to="/mypage" onClick={closeMenu}>👤 MyPage</Link>
             </li>
+            {loggedIn ? (
+              <li className="nav-item nav-item-custom">
+                <button className="nav-link nav-link-custom" style={{background:'none',border:'none',cursor:'pointer'}} onClick={handleLogout}>
+                  🔓 Logout
+                </button>
+              </li>
+            ) : (
             <li className="nav-item nav-item-custom">
               <Link className={`nav-link nav-link-custom ${isActive('/login')}`} to="/login" onClick={closeMenu}>🔐 Login</Link>
             </li>
+            )}    
 
             {/* ✅ 관리자 진입 메뉴 (토큰 유무로 분기) */}
             <li className="nav-item nav-item-custom">

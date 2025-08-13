@@ -111,3 +111,11 @@ export const proxyImage = (originUrl) =>
 export const AUTH = { TOKEN_KEY: USER_TOKEN_KEY, ADMIN_TOKEN_KEY };
 export { API_BASE };
 
+// 로그아웃
+export const logoutUser = () => {
+  localStorage.removeItem(USER_TOKEN_KEY);
+  delete api.defaults.headers.common["Authorization"];
+  // 로그아웃 시 로그인 페이지로 이동
+  window.location.replace("/login"); 
+};
+

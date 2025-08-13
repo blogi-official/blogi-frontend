@@ -6,9 +6,9 @@ const isLocal = localHosts.includes(window.location.hostname);
 
 // ── 배포용 절대 오리진 (필요시 window.__BLOGI_* 로 재정의 가능) ──
 const PROD_API_ORIGIN =
-  window.__BLOGI_API_ORIGIN || "https://blogi.store";
+  window.__BLOGI_API_ORIGIN || "https://backend.blogi.store";
 const PROD_FASTAPI_ORIGIN =
-  window.__BLOGI_FASTAPI_ORIGIN || "https://blogi.store/fastapi";
+  window.__BLOGI_FASTAPI_ORIGIN || "https://backend.blogi.store/fastapi";
 
 // ✅ 기존 코드와의 하위 호환을 위해 API_BASE도 그대로 export
 const API_BASE = isLocal

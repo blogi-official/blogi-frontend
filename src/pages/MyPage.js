@@ -37,7 +37,7 @@ const MyPage = () => {
       /* 💫 마법같은 배경 오버레이 */
       .mypage-magic-container::before {
         content: '';
-        position: absolute;
+        position: fixed;
         top: 0;
         left: 0;
         width: 100%;
@@ -143,7 +143,7 @@ const MyPage = () => {
       .mypage-header {
         text-align: center;
         margin-bottom: 4rem;
-        position: relative;
+        position: sticky;
         z-index: 2;
       }
       

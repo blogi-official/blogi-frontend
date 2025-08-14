@@ -1,5 +1,6 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { api } from '../api/client';
+import { updatePostStatus } from '../api/posts';
 
 // 분리해둔 훅과 드로어 컴포넌트
 import useGenerateFlow from "../hooks/useGenerateFlow";
@@ -329,6 +330,20 @@ const injectStyles = () => {
       transform: scale(1.05);
       box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
     }
+
+    .generate-cache-badge { 
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 0.5rem;
+      font-size: 0.75rem; 
+      color: #4338ca; 
+      background: rgba(99,102,241,0.1); 
+      border: 1px solid rgba(99,102,241,0.3); 
+      padding: 0.25rem 0.55rem; 
+      border-radius: 999px; 
+      font-weight: 600; 
+    }
     
     /* 사이드바 - 글래스모피즘 효과 */
     .sidebar {
@@ -613,8 +628,7 @@ function Home() {
   const [sortBy, setSortBy] = useState("latest");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [error, setError] = useState("");
-  const lastQueryRef = useRef("");
+  const [error] = useState("");
 
   // ★ 추가: 생성/상세/복사/PDF은 훅이 담당, Home은 호출만
   const {
@@ -647,10 +661,19 @@ function Home() {
           params: { sort: safeSort, page, page_size: 12 },
         });
 
-        const data = response.data;
-        setKeywords(data.data || data.results || []);
-        if (data.pagination) {
-          setTotalPages(data.pagination.total_pages || 1);
+        let dataList = response.data.data || response.data.results || [];
+
+        // localStorage 반영
+        const storedIds = JSON.parse(localStorage.getItem("generatedKeywords") || "[]");
+        dataList = dataList.map(k => ({
+          ...k,
+          is_generated: storedIds.includes(k.id)
+        }));
+
+        setKeywords(dataList);
+
+        if (response.data.pagination) {
+          setTotalPages(response.data.pagination.total_pages || 1);
         }
       } catch (err) {
         console.error("키워드 불러오기 실패", err);
@@ -662,10 +685,32 @@ function Home() {
     fetchKeywords();
   }, [sortBy, page]);
 
-  // ✅ 최소 수정: 클릭 시 훅만 호출 (페이지 이동/직접 호출 제거)
-  const handleKeywordClick = async (keyword) => {
-    // 로그인 체크는 훅 내부에서 처리(없으면 /login 이동)
-    await generateByKeyword(keyword);
+  // ✅ 최소 수정: 클릭 시 훅 호출 + UI 반영
+  const handleKeywordClick = async (clickedKeyword) => {
+    // 로그인 체크는 훅 내부에서 처리
+    const postId = await generateByKeyword(clickedKeyword);
+    if (!postId) return;
+
+    // 서버에도 PATCH 요청: 생성 상태 true 업데이트
+    try {
+      await updatePostStatus(postId);
+    } catch (err) {
+      console.error("상태 업데이트 실패", err);
+    }
+
+    // UI에 바로 반영: 클릭한 키워드 is_generated true
+    setKeywords((prev) =>
+      prev.map((k) =>
+        k.id === clickedKeyword.id ? { ...k, is_generated: true } : k
+      )
+    );
+
+    // localStorage에 저장
+    const storedIds = JSON.parse(localStorage.getItem("generatedKeywords") || "[]");
+    if (!storedIds.includes(clickedKeyword.id)) {
+      storedIds.push(clickedKeyword.id);
+      localStorage.setItem("generatedKeywords", JSON.stringify(storedIds));
+    }
   };
 
   return (
@@ -715,7 +760,10 @@ function Home() {
                       style={disabled ? { pointerEvents: "none", opacity: 0.6 } : {}}
                     >
                       <h3 className="keyword-title">{keyword.title}</h3>
-                      <div className="keyword-category">{keyword.category}</div>
+                      <div className="keyword-category">{keyword.category}</div> 
+                      {keyword.is_generated && (
+                        <div className="generate-cache-badge">⚡ 생성 완료</div>
+                      )}
                       {isThisGenerating && (
                         <div style={{ position: "absolute", right: 16, top: 16, fontSize: 18 }}>
                           ⏳

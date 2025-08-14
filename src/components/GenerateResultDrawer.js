@@ -4,7 +4,6 @@ export default function GenerateResultDrawer({
   open,
   loading,
   detail,
-  fromCache,
   onCopy,
   onClose,
   onDownloadPdf,
@@ -95,7 +94,6 @@ export default function GenerateResultDrawer({
       .generate-modal-icon { font-size: 2rem; animation: title-icon-pulse 3s ease-in-out infinite; }
       @keyframes title-icon-pulse { 0%,100% { transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 10px rgba(102,126,234,0.3)); } 50% { transform: scale(1.1) rotate(5deg); filter: drop-shadow(0 0 20px rgba(102,126,234,0.5)); } }
       .generate-modal-title { font-size: 1.5rem; font-weight: 800; color: #374151; margin: 0; }
-      .generate-cache-badge { font-size: 0.75rem; color: #4338ca; background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.3); padding: 0.25rem 0.75rem; border-radius: 999px; font-weight: 600; }
 
       .generate-modal-close { width: 2.5rem; height: 2.5rem; border: none; background: rgba(239,68,68,0.1); color: #dc2626; border-radius: 50%; cursor: pointer; font-size: 1.2rem; font-weight: bold; display: flex; align-items: center; justify-content: center; }
 
@@ -263,7 +261,6 @@ export default function GenerateResultDrawer({
                   {loading ? "마법을 부리는 중..." : (detail && detail.title) || "생성 결과"}
                 </h2>
               </div>
-              {fromCache && <span className="generate-cache-badge">⚡ from cache</span>}
             </div>
             <button className="generate-modal-close" onClick={onClose} aria-label="모달 닫기">✕</button>
           </div>

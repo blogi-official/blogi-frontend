@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { generatePost } from "../api/generate";
 import { getPostDetail, copyPost } from "../api/posts";
 import { api } from "../api/client";
+import { updatePostStatus } from '../api/posts';
 import { buildCopyHtml, copyHtmlRich } from "../utils/htmlPipeline";
 
 export default function useGenerateFlow() {
@@ -46,15 +47,27 @@ export default function useGenerateFlow() {
       safeSet(setError, "");
 
       try {
+        // 키워드 클릭 로그
         api.post(`/keywords/${keyword.id}/click/`).catch(function(){});
+        
+        // 콘텐츠 생성
         const gen = await generatePost(keyword.id);
         if (gen.status !== "success" || !gen.post_id) {
           throw new Error(gen.error_message || "생성에 실패했습니다.");
         }
         safeSet(setFromCache, !!gen.from_cache);
-
+        
+        // 상세 정보 로딩 시작
         safeSet(setLoadingDetail, true);
-        const post = await getPostDetail(gen.post_id);
+        let post = await getPostDetail(gen.post_id);
+        //const post = await getPostDetail(gen.post_id);
+
+        // 생성 상태가 false라면 PATCH로 true 업데이트
+        if (!post.is_generated) {
+          const updated = await updatePostStatus(gen.post_id);
+          post = updated; // 서버 반환값 반영
+        }
+
         safeSet(setDetail, post);
         safeSet(setOpen, true);
         return gen.post_id;
@@ -99,7 +112,7 @@ export default function useGenerateFlow() {
       const cd = res.headers && (res.headers["content-disposition"] || res.headers["Content-Disposition"]);
       if (cd) {
         const utf8Match = cd.match(/filename\*=(?:UTF-8'')?([^;]+)/i);
-        const plainMatch = cd.match(/filename="?([^\";]+)"?/i);
+        const plainMatch = cd.match(/filename="?([^";]+)"?/i);
         if (utf8Match && utf8Match[1]) {
           try { filename = decodeURIComponent(utf8Match[1].trim()); } catch { filename = utf8Match[1].trim(); }
         } else if (plainMatch && plainMatch[1]) {

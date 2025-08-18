@@ -1,18 +1,28 @@
 // src/api/keywords.js
-import { api } from "./client";
+import { api, USER_TOKEN_KEY } from "./client";
 
 /** 유저 공개용 키워드 목록
- * params: { q?, page=1, page_size=20, sort="latest" }
- * 다양한 스키마 방어적으로 파싱
+ * params: { q?, page=1, page_size=20, sort? }
+ * 로그인 상태면 sort=latest 시 관심사 기반 우선 정렬됨
  */
 export const getPublicKeywords = async (params = {}) => {
+  // 토큰 체크 (로그인 상태 확인)
+  const token = localStorage.getItem(USER_TOKEN_KEY);
+
   const query = {
-    sort: "latest",
-    page: 1,
-    page_size: 20,
+    sort: params.sort || "latest", // 기본값 latest
+    page: params.page || 1,
+    page_size: params.page_size || 20,
     ...params,
   };
-  const res = await api.get("/keywords/", { params: query });
+
+  // 헤더 세팅
+  const headers = {};
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const res = await api.get("/keywords/", { params: query, headers });
   return res.data;
 };
 

@@ -57,26 +57,28 @@ export default function useGenerateFlow() {
         }
         safeSet(setFromCache, !!gen.from_cache);
         
-        // 상세 정보 로딩 시작
+        // 상세 로딩 시작: 드로어를 먼저 열어 로딩 상태를 보여줌
         safeSet(setLoadingDetail, true);
-        let post = await getPostDetail(gen.post_id);
-        //const post = await getPostDetail(gen.post_id);
+        safeSet(setOpen, true); 
 
-        // 생성 상태가 false라면 PATCH로 true 업데이트
-        if (!post.is_generated) {
-          const updated = await updatePostStatus(gen.post_id);
-          post = updated; // 서버 반환값 반영
-        }
-
+        const post = await getPostDetail(gen.post_id);
         safeSet(setDetail, post);
-        safeSet(setOpen, true);
+
+        //safeSet(setOpen, true);
+        // 데이터 로딩과 상태 설정이 모두 끝난 후 로딩 상태를 해제
+        safeSet(setLoadingDetail, false);
+
         return gen.post_id;
       } catch (e) {
         console.error(e);
         safeSet(setError, "생성 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+
+        // 에러 발생 시에도 로딩 상태 해제
+        safeSet(setLoadingDetail, false);
+
         return null;
       } finally {
-        safeSet(setLoadingDetail, false);
+        // safeSet(setLoadingDetail, false);
         safeSet(setGeneratingId, null);
       }
     },

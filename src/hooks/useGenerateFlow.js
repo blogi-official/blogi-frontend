@@ -57,7 +57,7 @@ export default function useGenerateFlow() {
         }
         safeSet(setFromCache, !!gen.from_cache);
         
-        // 상세 로딩 시작, 드로어를 먼저 열어 로딩 상태를 보여줌
+        // 상세 로딩 시작: 드로어를 먼저 열어 로딩 상태를 보여줌
         safeSet(setLoadingDetail, true);
         safeSet(setOpen, true); 
 

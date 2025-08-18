@@ -664,10 +664,10 @@ function Home() {
         let dataList = response.data.data || response.data.results || [];
 
         // localStorage 반영
-        const storedIds = JSON.parse(localStorage.getItem("generatedKeywords") || "[]");
+        //const storedIds = JSON.parse(localStorage.getItem("generatedKeywords") || "[]");
         dataList = dataList.map(k => ({
           ...k,
-          is_generated: storedIds.includes(k.id)
+          is_generated: k.is_generated
         }));
 
         setKeywords(dataList);

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../api/client';
 import { updatePostStatus } from '../api/posts';
+import logo from "../assets/bloigi-logo.png"; 
+
 
 // 분리해둔 훅과 드로어 컴포넌트
 import useGenerateFlow from "../hooks/useGenerateFlow";
@@ -716,17 +718,27 @@ function Home() {
   return (
     <>
       {/* 헤더 (기존 유지) */}
-      <header className="header">
-        <div className="floating-elements">
-          <div className="floating-element"></div>
-          <div className="floating-element"></div>
-          <div className="floating-element"></div>
-          <div className="floating-element"></div>
-        </div>
+      <header className="header bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-4">
         <div className="header-content">
-          <div className="container">
-            <h1> Blogi 추천 키워드 </h1>
-            <p>관심사 기반으로 맞춤 키워드를 추천해드려요</p>
+          <div className="container mx-auto px-4">
+            <div className="flex items-center gap-3">
+              {/* 로고 */}
+              <img
+                src={logo}
+                alt="Blogi Logo"
+                style={{ width: "300px", height: "auto" }} // 👈 px 단위로 강제
+                className="drop-shadow-md"
+              />
+              {/* 타이틀 */}
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+                  Blogi 추천 키워드
+                </h1>
+                <p className="text-sm sm:text-base text-gray-100 mt-1">
+                  관심사 기반으로 맞춤 키워드를 추천해드려요
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </header>

@@ -30,7 +30,7 @@ function Navigator() {
         font-weight: 700 !important;
         color: white !important;
         text-decoration: none !important;
-        background: linear-gradient(135deg, #667eea, #764ba2);
+        background: linear-gradient(135deg,rgb(255, 255, 255),rgb(255, 255, 255));
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;

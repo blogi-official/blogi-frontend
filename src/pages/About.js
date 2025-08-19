@@ -1,149 +1,143 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'; 
 
-// CSS를 확실하게 주입
+// CSS를 확실하게 주입 (About 범위로만 스코프)
 const injectStyles = () => {
   if (document.getElementById('about-styles')) return;
   
   const style = document.createElement('style');
   style.id = 'about-styles';
   style.textContent = `
-    /* 기본 리셋 */
-    * {
+    /* 기본 리셋 - About 범위에만 적용 */
+    .about-page * {
       box-sizing: border-box;
     }
     
     /* 그라디언트 배경 */
-    .gradient-bg {
+    .about-page .gradient-bg {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     }
     
     /* 카드 호버 효과 */
-    .card-hover {
+    .about-page .card-hover {
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       cursor: pointer;
     }
-    .card-hover:hover {
+    .about-page .card-hover:hover {
       transform: translateY(-8px);
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
     }
     
     /* 스텝 라인 */
-    .step-line {
+    .about-page .step-line {
       background: linear-gradient(90deg, #667eea, #764ba2);
     }
     
     /* 기술 배지 */
-    .tech-badge {
+    .about-page .tech-badge {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       transition: all 0.3s ease;
       cursor: pointer;
     }
-    .tech-badge:hover {
+    .about-page .tech-badge:hover {
       transform: scale(1.05);
       box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
     }
     
-    /* 플로팅 애니메이션 */
-    .floating {
-      animation: float 3s ease-in-out infinite;
+    /* 플로팅 애니메이션 - 전역 충돌 방지용 네이밍 */
+    .about-page .floating {
+      animation: about-float 3s ease-in-out infinite;
     }
-    .floating:nth-child(2) {
+    .about-page .floating:nth-child(2) {
       animation-delay: 1s;
     }
-    .floating:nth-child(3) {
+    .about-page .floating:nth-child(3) {
       animation-delay: 2s;
     }
     
-    @keyframes float {
+    @keyframes about-float {
       0%, 100% { transform: translateY(0px); }
       50% { transform: translateY(-10px); }
     }
     
     /* 반응형 그리드 강제 적용 */
-    .grid-3 {
+    .about-page .grid-3 {
       display: grid;
       grid-template-columns: repeat(1, 1fr);
       gap: 2rem;
     }
-    
     @media (min-width: 768px) {
-      .grid-3 {
+      .about-page .grid-3 {
         grid-template-columns: repeat(3, 1fr);
       }
     }
     
-    .grid-5 {
+    .about-page .grid-5 {
       display: grid;
       grid-template-columns: repeat(1, 1fr);
       gap: 2rem;
     }
-    
     @media (min-width: 768px) {
-      .grid-5 {
+      .about-page .grid-5 {
         grid-template-columns: repeat(5, 1fr);
       }
     }
     
-    .grid-features {
+    .about-page .grid-features {
       display: grid;
       grid-template-columns: repeat(1, 1fr);
       gap: 2rem;
     }
-    
     @media (min-width: 768px) {
-      .grid-features {
+      .about-page .grid-features {
         grid-template-columns: repeat(2, 1fr);
       }
     }
-    
     @media (min-width: 1024px) {
-      .grid-features {
+      .about-page .grid-features {
         grid-template-columns: repeat(3, 1fr);
       }
     }
     
     /* 컨테이너 */
-    .container {
+    .about-page .container {
       max-width: 1200px;
       margin: 0 auto;
       padding: 0 1rem;
     }
     
     /* 섹션 패딩 */
-    .section {
+    .about-page .section {
       padding: 5rem 0;
     }
     
     /* 텍스트 스타일 */
-    .hero-title {
+    .about-page .hero-title {
       font-size: 3rem;
       font-weight: 700;
       color: white;
       margin-bottom: 1.5rem;
       line-height: 1.1;
     }
-    
     @media (min-width: 768px) {
-      .hero-title {
+      .about-page .hero-title {
         font-size: 4.5rem;
       }
     }
     
-    .hero-subtitle {
+    .about-page .hero-subtitle {
       font-size: 1.25rem;
       color: rgba(255, 255, 255, 0.9);
       margin-bottom: 2rem;
       line-height: 1.6;
     }
-    
     @media (min-width: 768px) {
-      .hero-subtitle {
+      .about-page .hero-subtitle {
         font-size: 1.5rem;
       }
     }
     
-    .section-title {
+    .about-page .section-title {
       font-size: 2.5rem;
       font-weight: 700;
       color: #1f2937;
@@ -151,7 +145,7 @@ const injectStyles = () => {
       text-align: center;
     }
     
-    .section-desc {
+    .about-page .section-desc {
       font-size: 1.25rem;
       color: #6b7280;
       text-align: center;
@@ -162,34 +156,31 @@ const injectStyles = () => {
     }
     
     /* 카드 스타일 */
-    .card {
+    .about-page .card {
       background: white;
       padding: 2rem;
       border-radius: 1rem;
       border: 1px solid #e5e7eb;
       height: 100%;
     }
-    
-    .card-icon {
+    .about-page .card-icon {
       font-size: 2.5rem;
       margin-bottom: 1rem;
       display: block;
     }
-    
-    .card-title {
+    .about-page .card-title {
       font-size: 1.25rem;
       font-weight: 700;
       color: #1f2937;
       margin-bottom: 0.75rem;
     }
-    
-    .card-desc {
+    .about-page .card-desc {
       color: #6b7280;
       line-height: 1.6;
     }
     
     /* 스텝 원 */
-    .step-circle {
+    .about-page .step-circle {
       width: 5rem;
       height: 5rem;
       border-radius: 50%;
@@ -200,21 +191,19 @@ const injectStyles = () => {
       margin: 0 auto 1rem auto;
       transition: all 0.3s ease;
     }
-    
-    .step-circle.active {
+    .about-page .step-circle.active {
       background: linear-gradient(135deg, #3b82f6, #8b5cf6);
       color: white;
       box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
     }
-    
-    .step-circle.inactive {
+    .about-page .step-circle.inactive {
       background: white;
       color: #6b7280;
       border: 2px solid #e5e7eb;
     }
     
     /* 버튼 */
-    .btn-primary {
+    .about-page .btn-primary {
       background: white;
       color: #7c3aed;
       padding: 1rem 2rem;
@@ -226,57 +215,44 @@ const injectStyles = () => {
       transition: all 0.3s ease;
       box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
     }
-    
-    .btn-primary:hover {
+    .about-page .btn-primary:hover {
       background: rgba(255, 255, 255, 0.9);
       box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
     }
     
     /* 배경 색상 */
-    .bg-white { background-color: white; }
-    .bg-gray-50 { background-color: #f9fafb; }
-    .bg-blue-50 { background-color: #eff6ff; }
-    .bg-purple-50 { background-color: #faf5ff; }
-    .bg-pink-50 { background-color: #fdf2f8; }
-    .bg-green-50 { background-color: #f0fdf4; }
+    .about-page .bg-white { background-color: white; }
+    .about-page .bg-gray-50 { background-color: #f9fafb; }
+    .about-page .bg-blue-50 { background-color: #eff6ff; }
+    .about-page .bg-purple-50 { background-color: #faf5ff; }
+    .about-page .bg-pink-50 { background-color: #fdf2f8; }
+    .about-page .bg-green-50 { background-color: #f0fdf4; }
     
     /* 그라디언트 배경 */
-    .bg-gradient-blue { background: linear-gradient(135deg, #eff6ff, #faf5ff); }
-    .bg-gradient-purple { background: linear-gradient(135deg, #faf5ff, #fdf2f8); }
-    .bg-gradient-green { background: linear-gradient(135deg, #f0fdf4, #eff6ff); }
+    .about-page .bg-gradient-blue { background: linear-gradient(135deg, #eff6ff, #faf5ff); }
+    .about-page .bg-gradient-purple { background: linear-gradient(135deg, #faf5ff, #fdf2f8); }
+    .about-page .bg-gradient-green { background: linear-gradient(135deg, #f0fdf4, #eff6ff); }
     
-    /* 텍스트 중앙 정렬 */
-    .text-center { text-align: center; }
-    
-    /* 상대/절대 위치 */
-    .relative { position: relative; }
-    .absolute { position: absolute; }
-    
-    /* z-index */
-    .z-10 { z-index: 10; }
-    
-    /* 오버플로우 */
-    .overflow-hidden { overflow: hidden; }
-    
-    /* 플렉스 */
-    .flex { display: flex; }
-    .items-center { align-items: center; }
-    .justify-center { justify-content: center; }
-    .flex-wrap { flex-wrap: wrap; }
-    .gap-4 { gap: 1rem; }
-    
-    /* 마진/패딩 */
-    .mb-4 { margin-bottom: 1rem; }
-    .mb-8 { margin-bottom: 2rem; }
-    .mb-16 { margin-bottom: 4rem; }
-    .pt-8 { padding-top: 2rem; }
-    
-    /* 투명도 */
-    .opacity-10 { opacity: 0.1; }
-    .opacity-20 { opacity: 0.2; }
-    .opacity-60 { opacity: 0.6; }
-    .opacity-80 { opacity: 0.8; }
-    .opacity-90 { opacity: 0.9; }
+    /* 유틸리티(About 범위 한정) */
+    .about-page .text-center { text-align: center; }
+    .about-page .relative { position: relative; }
+    .about-page .absolute { position: absolute; }
+    .about-page .z-10 { z-index: 10; }
+    .about-page .overflow-hidden { overflow: hidden; }
+    .about-page .flex { display: flex; }
+    .about-page .items-center { align-items: center; }
+    .about-page .justify-center { justify-content: center; }
+    .about-page .flex-wrap { flex-wrap: wrap; }
+    .about-page .gap-4 { gap: 1rem; }
+    .about-page .mb-4 { margin-bottom: 1rem; }
+    .about-page .mb-8 { margin-bottom: 2rem; }
+    .about-page .mb-16 { margin-bottom: 4rem; }
+    .about-page .pt-8 { padding-top: 2rem; }
+    .about-page .opacity-10 { opacity: 0.1; }
+    .about-page .opacity-20 { opacity: 0.2; }
+    .about-page .opacity-60 { opacity: 0.6; }
+    .about-page .opacity-80 { opacity: 0.8; }
+    .about-page .opacity-90 { opacity: 0.9; }
   `;
   
   document.head.appendChild(style);
@@ -688,10 +664,15 @@ const Footer = () => {
 const About = () => {
   useEffect(() => {
     injectStyles();
+    // 페이지를 떠날 때 스타일 제거 (전역 오염 방지)
+    return () => {
+      const el = document.getElementById('about-styles');
+      if (el) el.remove();
+    };
   }, []);
 
   return (
-    <div style={{minHeight: '100vh', background: '#f9fafb'}}>
+    <div className="about-page" style={{minHeight: '100vh', background: '#f9fafb'}}>
       <HeroSection />
       <ServiceOverview />
       <UserFlow />

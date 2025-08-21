@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { api } from "../api/client";
 
-const categoryOptions = ["연예", "경제", "스포츠", "패션", "자동차", "여행", "맛집"];
+const categoryOptions = ["연예", "경제", "스포츠", "야구", "드라마", "패션", "자동차", "여행", "맛집"];
 
 const NicknameEditModal = ({ user = {}, onClose, onNicknameUpdated }) => {
   const initialized = useRef(false);
@@ -420,6 +420,8 @@ const NicknameEditModal = ({ user = {}, onClose, onNicknameUpdated }) => {
       '연예': '🎭',
       '경제': '💰',
       '스포츠': '⚽',
+      "야구": "⚾",
+      "드라마": "🎬",
       '패션': '👗',
       '자동차': '🚗',
       '여행': '✈️',

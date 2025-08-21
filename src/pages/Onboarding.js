@@ -2,13 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, AUTH } from '../api/client';
 
-const categoryOptions = ["연예", "경제", "스포츠", "패션", "자동차", "여행", "맛집"];
+const categoryOptions = ["연예", "경제", "스포츠", "야구", "드라마", "패션", "자동차", "여행", "맛집"];
 
 // 카테고리별 이모지 매핑
 const categoryEmojis = {
   "연예": "🎭",
   "경제": "💰", 
   "스포츠": "⚽",
+  "야구": "⚾",
+  "드라마": "🎬",
   "패션": "👗",
   "자동차": "🚗",
   "여행": "✈️",
